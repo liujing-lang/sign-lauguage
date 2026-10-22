@@ -9,19 +9,19 @@
   <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
 </head>
 <body>
-  <!-- 画布背景（森林） -->
+  <!-- 画布背景 -->
   <div id="forest-bg"></div>
 
-  <!-- 欢迎页（图1） -->
+  <!-- 欢迎页 -->
   <section id="welcome-page" class="page active">
     <div class="card">
       <h1>Let your hands speak.<br><em>The forest will answer.</em></h1>
       <ul class="gesture-list">
         <li><span class="emoji">✋</span> Open palm <span class="desc">call the rain</span></li>
-        <li><span class="emoji">↔️</span> Sweep <span class="desc">move the wind</span></li>
+        <li><span class="emoji">👋</span> Sweep <span class="desc">move the wind</span></li>
         <li><span class="emoji">🤏</span> Pinch <span class="desc">wake fireflies</span></li>
         <li><span class="emoji">✊</span> Closed fist <span class="desc">quiet the forest</span></li>
-        <li><span class="emoji">🙏</span> Hands together <span class="desc">strike the lighten</span></li>
+        <li><span class="emoji">🙏</span> Hands together <span class="desc">strike the lightning</span></li>
       </ul>
       <button id="enter-btn">Enter quietly ↓</button>
       <p class="sub-hint">Allow camera access to begin the live experience</p >
@@ -32,13 +32,12 @@
   <section id="forest-page" class="page">
     <div class="hud">
       <span class="status">GESTURE SENSOR · READY</span>
-      <span class="caption">The forest is listening · <span id="gesture-name">Open palm</span></span>
+      <span class="caption">The forest is listening · <span id="gesture-name">Closed fist</span></span>
     </div>
   </section>
 
-  <!-- 逻辑 -->
+  <!-- 引入你的脚本 -->
   <script src="sketch.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
-

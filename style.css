@@ -1,49 +1,13 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  background: #0b2e26; /* 图1深绿 */
-  color: #e8f5e9;
-  overflow: hidden;
-  height: 100vh;
-}
-#forest-bg {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 0; opacity: 0.6; transition: opacity 1s;
-}
-.page {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  display: none; align-items: center; justify-content: center;
-  z-index: 1;
-}
-.page.active { display: flex; }
-.card {
-  background: rgba(232, 245, 233, 0.95);
-  color: #1b3a2d;
-  padding: 3rem 4rem; border-radius: 8px;
-  text-align: left; max-width: 480px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-  transition: transform 0.8s, opacity 0.8s;
-}
-.card h1 { font-size: 2.2rem; line-height: 1.2; margin-bottom: 2rem; font-weight: 400; }
-.card em { font-style: italic; color: #2e5e48; }
-.gesture-list { list-style: none; margin-bottom: 2rem; }
-.gesture-list li {
-  display: flex; align-items: center; padding: 0.6rem 0;
-  border-bottom: 1px solid rgba(46,94,72,0.2); font-size: 0.95rem;
-}
-.gesture-list .emoji { margin-right: 12px; font-size: 1.2rem; }
-.gesture-list .desc { margin-left: auto; opacity: 0.6; font-style: italic; }
-#enter-btn {
-  width: 100%; padding: 1rem; background: #1b3a2d; color: #e8f5e9;
-  border: none; cursor: pointer; font-size: 1rem; letter-spacing: 2px;
-  transition: background 0.3s;
-}
-#enter-btn:hover { background: #2e5e48; }
-.sub-hint { text-align: center; font-size: 0.75rem; opacity: 0.6; margin-top: 1rem; }
-.hud {
-  position: absolute; bottom: 40px; width: 100%; text-align: center;
-  font-size: 0.85rem; letter-spacing: 2px; opacity: 0.8;
-}
-/* 进入森林后隐藏卡片 */
-body.in-forest .card { transform: translateY(-20px); opacity: 0; pointer-events: none; }
-body.in-forest #forest-bg { opacity: 1; }
+body { margin: 0; overflow: hidden; background: #1a3a2a; font-family: sans-serif; color: #fff; }
+#forest-bg { position: fixed; top:0; left:0; width:100%; height:100%; z-index: -1; }
+.page { position: absolute; top:0; left:0; width:100%; height:100%; display: none; }
+.page.active { display: flex; align-items: center; justify-content: center; }
+.card { background: rgba(0,0,0,0.4); padding: 40px; border-radius: 20px; text-align: center; backdrop-filter: blur(5px); }
+h1 { font-weight: 300; line-height: 1.4; }
+.gesture-list { list-style: none; padding: 0; margin: 20px 0; text-align: left; }
+.gesture-list li { margin: 10px 0; font-size: 18px; }
+.emoji { font-size: 24px; margin-right: 10px; }
+.desc { opacity: 0.7; margin-left: 10px; font-style: italic; }
+#enter-btn { background: transparent; color: #fff; border: 1px solid #fff; padding: 12px 30px; cursor: pointer; border-radius: 30px; margin-top: 20px; }
+.sub-hint { opacity: 0.5; font-size: 12px; margin-top: 10px; }
+.hud { position: absolute; bottom: 40px; width: 100%; text-align: center; letter-spacing: 2px; font-size: 12px; opacity: 0.8; }
