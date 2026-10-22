@@ -1,9 +1,7 @@
 // =====================================================================
 //  《情绪森林》— INNER FOREST · GESTURE STUDY
-//  PART A（下面）是手势识别引擎，不要修改。
-//  PART B 是情绪森林场景渲染。
+//  完整版（已修复：重复引用/置信度/防抖/连续切换）
 // =====================================================================
-
 
 // ---------------------------------------------------------------------
 //  PART A — 手势识别引擎
@@ -121,18 +119,9 @@ function setStatus(msg) {
   if (el) el.html(msg);
 }
 
-
 // ---------------------------------------------------------------------
 //  PART B — 情绪森林场景
 // ---------------------------------------------------------------------
-
-/*  五种情绪 → 五种森林场景
-    生气  Closed_Fist  → 雷雨森林（深蓝、闪电、雨线）
-    高兴  Pointing_Up  → 春日暖阳（青绿、暖黄阳光）
-    害怕  Open_Palm    → 幽暗夜林（墨绿、乌云、雾气）
-    难过  Victory      → 秋日落叶（橙棕、枯叶飘落）
-    幸福  ILoveYou     → 萤火花海（墨蓝、点点萤光）
-*/
 
 const MOODS = [
   {
@@ -185,34 +174,32 @@ const MOODS = [
   },
 ];
 
-// 手势 → 情绪下标（0=平静, 1=生气, 2=高兴, 3=害怕, 4=难过, 5=幸福）
 const GESTURE_TO_MOOD = {
-  Closed_Fist: 1,   // 生气
-  Pointing_Up: 2,   // 高兴
-  Open_Palm: 3,     // 害怕
-  Victory: 4,       // 难过
-  ILoveYou: 5,      // 幸福
+  Closed_Fist: 1,
+  Pointing_Up: 2,
+  Open_Palm: 3,
+  Victory: 4,
+  ILoveYou: 5,
 };
 
-let moodIndex = 0;          // 当前情绪
-let targetMood = 0;         // 目标情绪（用于过渡）
-let blend = 1;              // 过渡混合系数 0→1
-let trees = [];             // 树木：{x, r, col, col2}
-let particles = [];         // 粒子（雨/萤火/花粉/落叶）
+let moodIndex = 0;
+let targetMood = 0;
+let blend = 1;
+let trees = [];
+let particles = [];
 let lastGesture = {};
 let showInfo = true;
 let fadeAlpha = 0;
+let lastSwitchTime = 0;  // ← 防抖：避免快速切换卡住
 
-// 声音
-let drone = [];             // 氛围底噪：几个正弦振荡器
+let drone = [];
 let chordVoices = [];
-let chime, chimeEnv;        // 切换情绪的叮声
+let chime, chimeEnv;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
 
-  // 预生成森林树木
   for (let i = 0; i < 26; i++) {
     trees.push({
       x: random(width),
@@ -221,15 +208,15 @@ function setup() {
       sway: random(TWO_PI),
     });
   }
-  trees.sort((a, b) => a.r - b.r); // 远小近大
+  trees.sort((a, b) => a.r - b.r);
 
   select("#enter").mouseClicked(enterForest);
 }
 
 function enterForest() {
   if (typeof userStartAudio === 'function') {
-  userStartAudio();
-}
+    userStartAudio();
+  }
 
   select("#intro").addClass("hidden");
   select("#forest").removeClass("hidden");
@@ -238,7 +225,6 @@ function enterForest() {
   video.size(640, 480);
   video.hide();
 
-  // 氛围底噪
   for (let i = 0; i < 3; i++) {
     const o = new p5.Oscillator("sine");
     o.amp(0);
@@ -246,7 +232,6 @@ function enterForest() {
     drone.push(o);
   }
 
-  // 和弦
   for (let i = 0; i < 4; i++) {
     const o = new p5.Oscillator("sine");
     o.amp(0);
@@ -257,7 +242,6 @@ function enterForest() {
     chordVoices.push({ osc: o, env: e });
   }
 
-  // 叮声
   chime = new p5.Oscillator("triangle");
   chime.amp(0);
   chime.start();
@@ -270,11 +254,11 @@ function enterForest() {
 }
 
 function draw() {
-  // 1. 手势识别
+  // 1. 手势识别（置信度从 0.6 降到 0.5，更容易触发）
   if (started) {
     updateHands();
     for (const hand of hands) {
-      const g = hand.score >= 0.6 ? hand.gesture : "None";
+      const g = hand.score >= 0.5 ? hand.gesture : "None";
       if (g === "None") continue;
       if (g !== lastGesture[hand.side]) onGesture(g, hand);
       lastGesture[hand.side] = g;
@@ -288,25 +272,25 @@ function draw() {
   if (blend < 1) blend = min(blend + 0.012, 1);
   if (blend >= 1 && moodIndex !== targetMood) moodIndex = targetMood;
 
-  // 3. 画天空渐变
+  // 3. 画天空
   drawSky(cur, tgt);
 
-  // 4. 画远处雾气
+  // 4. 雾气
   drawFog(cur, tgt);
 
-  // 5. 画森林（远→近）
+  // 5. 森林
   for (const t of trees) drawTree(t, cur, tgt);
 
-  // 6. 画水面倒影
+  // 6. 水面
   drawWater(cur, tgt);
 
-  // 7. 粒子系统
+  // 7. 粒子
   updateAndDrawParticles(cur, tgt);
 
-  // 8. 镜头画面
+  // 8. 摄像头
   if (started && showCamera) drawCamera();
 
-  // 9. 手势指尖提示
+  // 9. 手势提示
   if (started) {
     for (const hand of hands) {
       noStroke();
@@ -316,10 +300,10 @@ function draw() {
     if (showInfo) drawGestureInfo();
   }
 
-  // 10. 更新 HUD
+  // 10. HUD
   updateHUD();
 
-  // 11. 切换时的白色淡入淡出
+  // 11. 白色淡入淡出
   if (fadeAlpha > 0) {
     noStroke();
     fill(255, fadeAlpha);
@@ -327,8 +311,6 @@ function draw() {
     fadeAlpha = max(0, fadeAlpha - 6);
   }
 }
-
-/* ---------------- 绘制函数 ---------------- */
 
 function drawSky(cur, tgt) {
   noStroke();
@@ -358,13 +340,11 @@ function drawTree(t, cur, tgt) {
   const x = t.x + sway;
   const baseY = height * 0.86;
 
-  // 树干
   const trunkC = lerpColor(color(cur.trunk), color(tgt.trunk), blend);
   noStroke();
   fill(trunkC);
   rect(x - t.r * 0.12, baseY - t.r * 0.4, t.r * 0.24, t.r * 0.6, 3);
 
-  // 树冠（两层错落的圆）
   const c1 = lerpColor(color(cur.tree1), color(tgt.tree1), blend);
   const c2 = lerpColor(color(cur.tree2), color(tgt.tree2), blend);
   const useC1 = t.col === 0 ? c1 : c2;
@@ -387,7 +367,6 @@ function drawWater(cur, tgt) {
     fill(lerpColor(g1, g2, k * 0.5));
     rect(0, y, width, 3);
   }
-  // 水波纹
   stroke(255, 40);
   strokeWeight(1);
   for (let i = 0; i < 6; i++) {
@@ -402,7 +381,6 @@ function updateAndDrawParticles(cur, tgt) {
   const accent = lerpColor(color(cur.accent), color(tgt.accent), blend);
   const type = cur.pType;
 
-  // 维持粒子数量
   const targetCount = type === "none" ? 0 : 60;
   while (particles.length < targetCount) {
     particles.push(spawnParticle(type));
@@ -416,7 +394,7 @@ function updateAndDrawParticles(cur, tgt) {
     p.y += p.vy;
     p.vy += p.g;
 
-    if (p.life <= 0 || p.y > height || p.x < -20 || x > width + 20) {
+    if (p.life <= 0 || p.y > height || p.x < -20 || p.x > width + 20) {
       Object.assign(p, spawnParticle(type));
       continue;
     }
@@ -475,11 +453,14 @@ function spawnParticle(type) {
   return p;
 }
 
-/* ---------------- 手势响应 ---------------- */
+/* ---------------- 手势响应（带防抖） ---------------- */
 
 function onGesture(g, hand) {
   const newMood = GESTURE_TO_MOOD[g];
   if (newMood === undefined) return;
+
+  const now = millis();
+  if (now - lastSwitchTime < 800) return; // 800ms 内不重复切换，防止卡住
 
   if (newMood !== targetMood) {
     targetMood = newMood;
@@ -487,9 +468,9 @@ function onGesture(g, hand) {
     fadeAlpha = 120;
     playMoodChord(newMood);
     playChime();
+    lastSwitchTime = now;
   }
 
-  // 食指向上（高兴）额外在指尖位置冒出花粉粒子
   if (g === "Pointing_Up") {
     for (let i = 0; i < 8; i++) {
       particles.push({
