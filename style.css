@@ -1,13 +1,211 @@
-body { margin: 0; overflow: hidden; background: #1a3a2a; font-family: sans-serif; color: #fff; }
-#forest-bg { position: fixed; top:0; left:0; width:100%; height:100%; z-index: -1; }
-.page { position: absolute; top:0; left:0; width:100%; height:100%; display: none; }
-.page.active { display: flex; align-items: center; justify-content: center; }
-.card { background: rgba(0,0,0,0.4); padding: 40px; border-radius: 20px; text-align: center; backdrop-filter: blur(5px); }
-h1 { font-weight: 300; line-height: 1.4; }
-.gesture-list { list-style: none; padding: 0; margin: 20px 0; text-align: left; }
-.gesture-list li { margin: 10px 0; font-size: 18px; }
-.emoji { font-size: 24px; margin-right: 10px; }
-.desc { opacity: 0.7; margin-left: 10px; font-style: italic; }
-#enter-btn { background: transparent; color: #fff; border: 1px solid #fff; padding: 12px 30px; cursor: pointer; border-radius: 30px; margin-top: 20px; }
-.sub-hint { opacity: 0.5; font-size: 12px; margin-top: 10px; }
-.hud { position: absolute; bottom: 40px; width: 100%; text-align: center; letter-spacing: 2px; font-size: 12px; opacity: 0.8; }
+/* ============================================================
+   INNER FOREST · GESTURE STUDY
+   情绪森林 · 交互手势作品
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #d9ead3;            /* 浅绿底色 */
+  color: #2f3d2c;
+  font-family: Georgia, "Songti SC", "SimSun", "PingFang SC", "Microsoft YaHei", serif;
+}
+
+canvas { display: block; }
+
+.hidden { display: none !important; }
+
+/* ---------- 通用页面 ---------- */
+.page {
+  position: fixed;
+  inset: 0;
+}
+
+/* ============================================================
+   介绍页（图一风格）
+   ============================================================ */
+.page--intro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 森林氛围背景：浅绿渐变 + 柔光 */
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 55%),
+    linear-gradient(160deg, #cfe3c2 0%, #a9c98f 45%, #7aa86b 100%);
+  padding: 16px;
+  z-index: 20;
+}
+
+.card {
+  width: 100%;
+  max-width: 560px;
+  padding: 40px 36px 32px;
+  background: rgba(247, 251, 240, 0.94);
+  border: 1.5px solid rgba(122, 168, 107, 0.55);
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(60, 90, 50, 0.25);
+  backdrop-filter: blur(4px);
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.card h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 9vw, 4.4rem);
+  font-weight: normal;
+  letter-spacing: 0.14em;
+  color: #4a6b3a;
+}
+
+.sub {
+  margin: 10px 0 24px;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  opacity: 0.75;
+  font-style: italic;
+}
+
+.gestures {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 26px;
+  text-align: left;
+  line-height: 2.1;
+  font-size: 1rem;
+}
+
+.gestures li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 6px;
+}
+
+.gesture-emo {
+  font-style: normal;
+  font-size: 1.15rem;
+  width: 1.6em;
+  text-align: center;
+}
+
+.gestures b {
+  color: #3d5c2e;
+  min-width: 3.4em;
+  display: inline-block;
+}
+
+.hint {
+  margin: 0 0 22px;
+  font-size: 0.85rem;
+  opacity: 0.6;
+  line-height: 1.6;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+  padding: 14px 44px;
+  border: none;
+  border-radius: 8px;
+  background: #6f9960;
+  color: #fff;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.2s;
+}
+
+.btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+/* ============================================================
+   森林页 · HUD
+   ============================================================ */
+.hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 18px 22px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hud-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+#emotion-label {
+  font-size: 1.5rem;
+  letter-spacing: 0.16em;
+  color: #fff;
+  font-weight: bold;
+}
+
+#mood-label {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.85);
+  font-style: italic;
+}
+
+.hud-right {
+  color: rgba(255,255,255,0.9);
+  font-size: 0.85rem;
+  background: rgba(0,0,0,0.18);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.kbd {
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 0.8em;
+  margin-right: 2px;
+}
+
+/* 状态提示条 */
+.status {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  padding: 8px 18px;
+  border-radius: 24px;
+  background: rgba(247, 251, 240, 0.92);
+  color: #3d5c2e;
+  pointer-events: none;
+  z-index: 30;
+  white-space: nowrap;
+  max-width: calc(100vw - 40px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transition: opacity 0.6s;
+}
+
+/* 情绪变化时的过渡遮罩 */
+#fade {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40;
+  transition: opacity 0.9s ease;
+}

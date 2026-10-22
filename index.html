@@ -3,40 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inner Forest · Gesture Study</title>
+  <title>INNER FOREST · GESTURE STUDY</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- p5.js -->
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
 </head>
 <body>
-  <!-- 画布背景 -->
-  <div id="forest-bg"></div>
 
-  <!-- 欢迎页 -->
-  <section id="welcome-page" class="page active">
+  <!-- ============ 第一页：介绍页 ============ -->
+  <section id="intro" class="page page--intro">
     <div class="card">
-      <h1>Let your hands speak.<br><em>The forest will answer.</em></h1>
-      <ul class="gesture-list">
-        <li><span class="emoji">✋</span> Open palm <span class="desc">call the rain</span></li>
-        <li><span class="emoji">👋</span> Sweep <span class="desc">move the wind</span></li>
-        <li><span class="emoji">🤏</span> Pinch <span class="desc">wake fireflies</span></li>
-        <li><span class="emoji">✊</span> Closed fist <span class="desc">quiet the forest</span></li>
-        <li><span class="emoji">🙏</span> Hands together <span class="desc">strike the lightning</span></li>
+      <p class="eyebrow">INNER FOREST · GESTURE STUDY</p >
+      <h1>情绪森林</h1>
+      <p class="sub">Let your hands speak.<br />The forest will answer.</p >
+
+      <ul class="gestures">
+        <li><span class="gesture-emo">😠</span> <b>生气</b> · 握拳 ✊ → 雷雨森林</li>
+        <li><span class="gesture-emo">😄</span> <span class="gesture-emo">☝️</span> <b>高兴</b> · 食指向上 → 春日暖阳</li>
+        <li><span class="gesture-emo">😨</span> <b>害怕</b> · 张开手掌 🖐 → 幽暗夜林</li>
+        <li><span class="gesture-emo">😢</span> <b>难过</b> · 剪刀手 ✌️ → 秋日落叶</li>
+        <li><span class="gesture-emo">😊</span> <span class="gesture-emo">🤟</span> <b>幸福</b> · 我爱你 → 萤火花海</li>
       </ul>
-      <button id="enter-btn">Enter quietly ↓</button>
-      <p class="sub-hint">Allow camera access to begin the live experience</p >
+
+      <p class="hint">需要开启摄像头才能开始，请允许浏览器访问你的摄像头。</p >
+      <button id="enter" class="btn">Enter quietly →</button>
     </div>
+    <div id="status" class="status">等待进入…</div>
   </section>
 
-  <!-- 森林互动页 -->
-  <section id="forest-page" class="page">
-    <div class="hud">
-      <span class="status">GESTURE SENSOR · READY</span>
-      <span class="caption">The forest is listening · <span id="gesture-name">Closed fist</span></span>
+  <!-- ============ 第二页：森林画布 ============ -->
+  <section id="forest" class="page page--forest hidden">
+    <div id="hud" class="hud">
+      <div class="hud-left">
+        <span id="emotion-label">INNER FOREST</span>
+        <span id="mood-label">— 平静 —</span>
+      </div>
+      <div class="hud-right">
+        <span class="kbd">V</span> 镜头 &nbsp;
+        <span class="kbd">I</span> 信息 &nbsp;
+        <span class="kbd">C</span> 清空 &nbsp;
+        <span class="kbd">S</span> 保存 &nbsp;
+        <span class="kbd">Esc</span> 返回
+      </div>
     </div>
+    <div id="status" class="status">把手伸到摄像头前，做一个手势 ✋</div>
   </section>
 
-  <!-- 引入你的脚本 -->
+  <!-- p5.js -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+  <!-- 你的作品逻辑 -->
   <script src="sketch.js"></script>
   <script src="main.js"></script>
 </body>
