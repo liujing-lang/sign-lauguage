@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inner Forest · Gesture Study</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- p5.js + p5.sound（你的 sketch.js 用到 p5） -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/addons/p5.sound.min.js"></script>
+</head>
+<body>
+  <!-- ============================================================
+       页面一：欢迎 / 手势说明页（对应参考图3）
+       ============================================================ -->
+  <section id="welcome-page" class="page active">
+    <!-- 背景森林意象 + 发光点 -->
+    <div class="welcome-bg">
+      <div class="glow g1"></div>
+      <div class="glow g2"></div>
+      <div class="glow g3"></div>
+    </div>
+
+    <div class="card">
+      <div class="breadcrumb">INNER FOREST · GESTURE STUDY</div>
+
+      <h1 class="headline">
+        Let your hands speak.<br />
+        <em>The forest will answer.</em>
+      </h1>
+
+      <ul class="gesture-list">
+        <li>
+          <span class="gesture-emoji">✋</span>
+          <span class="gesture-name">Open palm</span>
+          <span class="gesture-emotion">难过 · rain falls</span>
+        </li>
+        <li>
+          <span class="gesture-emoji">✋↔✋</span>
+          <span class="gesture-name">Sweep</span>
+          <span class="gesture-emotion">高兴 · forest turns gold</span>
+        </li>
+        <li>
+          <span class="gesture-emoji">🤏</span>
+          <span class="gesture-name">Pinch</span>
+          <span class="gesture-emotion">幸福 · fireflies wake</span>
+        </li>
+        <li>
+          <span class="gesture-emoji">✊</span>
+          <span class="gesture-name">Closed fist</span>
+          <span class="gesture-emotion">生气 · the volcano wakes</span>
+        </li>
+        <li>
+          <span class="gesture-emoji">🙏</span>
+          <span class="gesture-name">Hands together</span>
+          <span class="gesture-emotion">害怕 · the sky keeps striking</span>
+        </li>
+      </ul>
+
+      <button id="enter-btn" class="enter-btn">Enter quietly ↓</button>
+      <p class="sub-hint">Allow camera access to begin the live experience</p >
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="bottom-bar">
+      <span class="bb-item">● GESTURE SENSOR · WAITING</span>
+      <span class="bb-item center">
+        Waiting<br /><small>Show your hand to the camera</small>
+      </span>
+      <span class="bb-item right">The forest is listening · 01 / 05</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       页面二：森林互动页
+       ============================================================ -->
+  <section id="forest-page" class="page">
+    <!-- 天空 / 云层（用于雷电视效） -->
+    <div class="sky-layer" id="sky-layer"></div>
+
+    <!-- 远景雾气（在森林后面、森林底部那层） -->
+    <div class="fog-container" id="fog-container">
+      <div class="fog fog-1"></div>
+      <div class="fog fog-2"></div>
+      <div class="fog fog-3"></div>
+    </div>
+
+    <!-- 森林 SVG（颜色随情绪切换） -->
+    <div class="forest-wrap">
+      <svg
+        id="forest"
+        class="forest-svg"
+        viewBox="0 0 1600 600"
+        preserveAspectRatio="xMidYMax slice"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <!-- 树的圆冠渐变，颜色由 CSS 变量驱动 -->
+          <radialGradient id="canopy-grad" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="var(--canopy-light)" />
+            <stop offset="100%" stop-color="var(--canopy-dark)" />
+          </radialGradient>
+          <radialGradient id="sun-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff2c0" stop-opacity="1" />
+            <stop offset="100%" stop-color="#fff2c0" stop-opacity="0" />
+          </radialGradient>
+        </defs>
+
+        <!-- ===== 太阳（高兴时显示） ===== -->
+        <g id="sun" class="fx-sun">
+          <circle cx="1200" cy="150" r="220" fill="url(#sun-grad)" />
+          <g class="sun-rays">
+            <line x1="1200" y1="40" x2="1200" y2="-10" />
+            <line x1="1200" y1="260" x2="1200" y2="310" />
+            <line x1="1090" y1="150" x2="1040" y2="150" />
+            <line x1="1310" y1="150" x2="1360" y2="150" />
+            <line x1="1115" y1="65" x2="1080" y2="30" />
+            <line x1="1285" y1="235" x2="1320" y2="270" />
+            <line x1="1115" y1="235" x2="1080" y2="270" />
+            <line x1="1285" y1="65" x2="1320" y2="30" />
+          </g>
+        </g>
+
+        <!-- ===== 火山（生气时显示） ===== -->
+        <g id="volcano" class="fx-volcano">
+          <path class="volcano-body" d="M 200 470 L 400 470 L 340 300 L 260 300 Z" />
+          <path class="volcano-body-dark" d="M 260 300 L 340 300 L 320 470 L 260 470 Z" />
+          <path class="lava" d="M 260 300 Q 300 220 340 300 Q 300 250 260 300 Z" />
+          <g class="fire-particles">
+            <circle cx="300" cy="270" r="6" />
+            <circle cx="285" cy="250" r="4" />
+            <circle cx="315" cy="240" r="5" />
+            <circle cx="300" cy="210" r="3" />
+          </g>
+        </g>
+
+        <!-- ===== 草地 ===== -->
+        <path
+          class="ground"
+          d="M 0 470 Q 400 450 800 465 T 1600 460 L 1600 600 L 0 600 Z"
+        />
+
+        <!-- ===== 树冠层（CSS 变量驱动颜色） ===== -->
+        <g class="trees" id="trees">
+          <!-- 每棵树：树干 + 两三个交叠圆冠 -->
+          <g class="tree" style="--tx: 150px; --ty: 300px; --s: 1.2;">
+            <rect x="-8" y="60" width="16" height="120" rx="6" class="trunk" />
+            <circle cx="-30" cy="40" r="55" class="canopy" />
+            <circle cx="30" cy="55" r="48" class="canopy" />
+            <circle cx="0" cy="20" r="60" class="canopy" />
+          </g>
+          <g class="tree" style="--tx: 420px; --ty: 340px; --s: 1.5;">
+            <rect x="-9" y="60" width="18" height="110" rx="6" class="trunk" />
+            <circle cx="-35" cy="40" r="65" class="canopy" />
+            <circle cx="35" cy="55" r="58" class="canopy" />
+            <circle cx="0" cy="15" r="72" class="canopy" />
+          </g>
+          <g class="tree" style="--tx: 700px; --ty: 310px; --s: 1.3;">
+            <rect x="-8" y="60" width="16" height="120" rx="6" class="trunk" />
+            <circle cx="-30" cy="40" r="58" class="canopy" />
+            <circle cx="30" cy="55" r="50" class="canopy" />
+            <circle cx="0" cy="20" r="64" class="canopy" />
+          </g>
+          <g class="tree" style="--tx: 980px; --ty: 330px; --s: 1.45;">
+            <rect x="-9" y="60" width="18" height="115" rx="6" class="trunk" />
+            <circle cx="-34" cy="40" r="62" class="canopy" />
+            <circle cx="34" cy="55" r="56" class="canopy" />
+            <circle cx="0" cy="18" r="70" class="canopy" />
+          </g>
+          <g class="tree" style="--tx: 1250px; --ty: 300px; --s: 1.25;">
+            <rect x="-8" y="60" width="16" height="125" rx="6" class="trunk" />
+            <circle cx="-30" cy="40" r="56" class="canopy" />
+            <circle cx="30" cy="55" r="49" class="canopy" />
+            <circle cx="0" cy="20" r="62" class="canopy" />
+          </g>
+          <g class="tree" style="--tx: 1480px; --ty: 340px; --s: 1.35;">
+            <rect x="-9" y="60" width="18" height="110" rx="6" class="trunk" />
+            <circle cx="-32" cy="40" r="60" class="canopy" />
+            <circle cx="32" cy="55" r="54" class="canopy" />
+            <circle cx="0" cy="18" r="66" class="canopy" />
+          </g>
+        </g>
+
+        <!-- ===== 前景草丛 ===== -->
+        <g class="bushes" id="bushes">
+          <g class="bush" style="--bx: 100px;"><path d="M0,0 q8,-28 16,0 q8,-34 16,0 q8,-26 16,0" /></g>
+          <g class="bush" style="--bx: 560px;"><path d="M0,0 q8,-26 16,0 q8,-32 16,0 q8,-24 16,0" /></g>
+          <g class="bush" style="--bx: 870px;"><path d="M0,0 q8,-28 16,0 q8,-34 16,0 q8,-26 16,0" /></g>
+          <g class="bush" style="--bx: 1150px;"><path d="M0,0 q8,-26 16,0 q8,-32 16,0 q8,-24 16,0" /></g>
+          <g class="bush" style="--bx: 1400px;"><path d="M0,0 q8,-28 16,0 q8,-34 16,0 q8,-26 16,0" /></g>
+        </g>
+
+        <!-- ===== 水面波纹（底部） ===== -->
+        <g class="water" id="water">
+          <path class="wave" d="M 0 545 Q 100 530 200 545 T 400 545 T 600 545 T 800 545 T 1000 545 T 1200 545 T 1400 545 T 1600 545" />
+          <path class="wave w2" d="M 0 565 Q 120 550 240 565 T 480 565 T 720 565 T 960 565 T 1200 565 T 1440 565 T 1600 565" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- ===== 天气特效层 ===== -->
+    <!-- 雨 -->
+    <div class="weather-layer" id="rain-layer"></div>
+    <!-- 闪电 -->
+    <div class="weather-layer" id="lightning-layer">
+      <div class="bolt" id="bolt"></div>
+      <div class="cloud-group" id="cloud-group"></div>
+    </div>
+    <!-- 萤火虫（幸福） -->
+    <div class="weather-layer" id="firefly-layer"></div>
+
+    <!-- ===== 底部 HUD ===== -->
+    <div class="forest-hud">
+      <div class="hud-left">
+        <span id="emotion-label">state · calm</span>
+        <span id="gesture-label">gesture · none</span>
+      </div>
+      <div class="hud-right">
+        <button id="reset-btn">reset forest</button>
+      </div>
+    </div>
+    <div id="status">waiting for the forest to wake…</div>
+
+    <!-- 隐藏的摄像头画面（镜像后低透明度预览） -->
+    <video id="camera-feed" playsinline></video>
+  </section>
+
+  <!-- 你的手势识别引擎 + 作品逻辑 -->
+  <script src="sketch.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

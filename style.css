@@ -1,0 +1,498 @@
+/* ============================================================
+   Inner Forest · Gesture Study
+   样式说明：
+   - :root 里的 --state-* 变量控制森林配色主题，由 app.js 切换 body 类名
+   - 雾气放在森林背后（z-index 分层），通过半透明流动渐变实现
+   ============================================================ */
+
+/* ---------- 基础 ---------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Georgia, "Songti SC", "SimSun", "PingFang SC", "Microsoft YaHei", serif;
+  background: #0a1410;
+  color: #f4eee6;
+}
+
+.page { position: fixed; inset: 0; transition: opacity 1.2s ease; }
+.page:not(.active) { opacity: 0; pointer-events: none; }
+
+
+/* ============================================================
+   页面一：欢迎页（参考图3）
+   ============================================================ */
+#welcome-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 30% 80%, rgba(20, 60, 45, 0.7), transparent 60%),
+    radial-gradient(ellipse at 70% 20%, rgba(15, 45, 55, 0.6), transparent 55%),
+    linear-gradient(180deg, #0c1f18 0%, #05120d 100%);
+  padding: 24px;
+}
+
+/* 背景发光点（森林意象） */
+.welcome-bg { position: absolute; inset: 0; overflow: hidden; }
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.5;
+  animation: drift 18s ease-in-out infinite alternate;
+}
+.g1 { width: 320px; height: 320px; left: 10%; bottom: -80px; background: #2d8f6a; }
+.g2 { width: 260px; height: 260px; right: 15%; top: 10%; background: #1f6f8b; animation-delay: -6s; }
+.g3 { width: 200px; height: 200px; left: 55%; bottom: 20%; background: #3a7d54; animation-delay: -12s; }
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(40px, -30px) scale(1.15); }
+}
+
+/* 卡片 */
+.card {
+  position: relative;
+  max-width: 620px;
+  width: 100%;
+  padding: 44px 48px 40px;
+  background: rgba(244, 238, 230, 0.94);
+  border: 2px solid rgba(45, 143, 106, 0.5);
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+.breadcrumb {
+  font-size: 0.78rem;
+  letter-spacing: 0.28em;
+  color: #2d8f6a;
+  margin-bottom: 26px;
+}
+.headline {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: #12322a;
+  line-height: 1.25;
+  margin-bottom: 34px;
+}
+.headline em { font-style: italic; opacity: 0.75; }
+
+/* 手势列表 */
+.gesture-list { list-style: none; text-align: left; margin-bottom: 34px; }
+.gesture-list li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(18, 50, 42, 0.12);
+  font-size: 0.98rem;
+  color: #12322a;
+}
+.gesture-emoji {
+  flex: 0 0 52px;
+  text-align: center;
+  font-size: 1.4rem;
+}
+.gesture-name {
+  flex: 0 0 150px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.gesture-emotion { opacity: 0.6; font-style: italic; }
+
+/* 按钮 */
+.enter-btn {
+  font-family: inherit;
+  font-size: 1.15rem;
+  letter-spacing: 0.16em;
+  padding: 14px 44px;
+  border: none;
+  border-radius: 8px;
+  background: #12322a;
+  color: #f4eee6;
+  cursor: pointer;
+  transition: filter 0.3s, transform 0.3s;
+}
+.enter-btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+.sub-hint {
+  margin-top: 16px;
+  font-size: 0.82rem;
+  opacity: 0.5;
+  color: #12322a;
+}
+
+/* 底部状态栏 */
+.bottom-bar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 20px 32px 24px;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: rgba(244, 238, 230, 0.7);
+  z-index: 2;
+}
+.bb-item.center { text-align: center; }
+.bb-item.right { text-align: right; }
+.bb-item small { opacity: 0.6; }
+
+
+/* ============================================================
+   页面二：森林页
+   ============================================================ */
+#forest-page { background: #000; }
+
+/* ---- 天空 / 云（雷电用） ---- */
+.sky-layer {
+  position: absolute; inset: 0;
+  background: var(--sky, #87c4d8);
+  transition: background 1.5s ease;
+  z-index: 0;
+}
+body.state-sad .sky-layer   { --sky: #4a5a6a; }
+body.state-angry .sky-layer { --sky: #2a1a1a; }
+
+/* ---- 雾气层（森林背后 + 底部流动） ---- */
+.fog-container {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 55%;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.fog {
+  position: absolute;
+  left: -20%;
+  width: 140%;
+  height: 100%;
+  background-repeat: repeat-x;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  animation: fog-scroll linear infinite;
+}
+/* 用多层径向渐变模拟雾团 */
+.fog-1 {
+  bottom: 0;
+  height: 70%;
+  background:
+    radial-gradient(ellipse 30% 60% at 15% 80%, rgba(230,240,235,0.5), transparent 70%),
+    radial-gradient(ellipse 40% 70% at 55% 90%, rgba(210,230,225,0.45), transparent 70%),
+    radial-gradient(ellipse 30% 60% at 85% 85%, rgba(235,245,240,0.5), transparent 70%);
+  animation-duration: 60s;
+}
+.fog-2 {
+  bottom: 5%;
+  height: 55%;
+  background:
+    radial-gradient(ellipse 35% 65% at 30% 90%, rgba(200,225,220,0.35), transparent 70%),
+    radial-gradient(ellipse 30% 60% at 75% 95%, rgba(220,235,230,0.4), transparent 70%);
+  animation-duration: 90s;
+  animation-direction: reverse;
+}
+.fog-3 {
+  bottom: -5%;
+  height: 40%;
+  background:
+    radial-gradient(ellipse 50% 80% at 50% 100%, rgba(180,215,210,0.5), transparent 70%);
+  animation-duration: 45s;
+}
+@keyframes fog-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-25%); }
+}
+
+/* ---- 森林 SVG ---- */
+.forest-wrap {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+}
+.forest-svg {
+  width: 100%;
+  height: auto;
+  max-height: 85vh;
+}
+
+/* SVG 配色：由 CSS 变量驱动，app.js 切换 body 类即可换色 */
+.forest-svg {
+  --canopy-light: #7fc98f;
+  --canopy-dark:  #2f7a48;
+  --trunk:        #4a3320;
+  --ground:       #3a6b3f;
+  --bush:         #4d8a55;
+  --wave:         rgba(255,255,255,0.5);
+  --sun-opacity:  0;
+  --volcano-opacity: 0;
+  transition: all 1.2s ease;
+}
+
+/* 各部件用变量上色 */
+.canopy { fill: url(#canopy-grad); transition: fill 1.2s ease; }
+.trunk  { fill: var(--trunk); transition: fill 1.2s ease; }
+.ground { fill: var(--ground); transition: fill 1.2s ease; }
+.bush path { stroke: var(--bush); stroke-width: 3; fill: none; stroke-linecap: round; transition: stroke 1.2s ease; }
+.wave { fill: none; stroke: var(--wave); stroke-width: 2; stroke-linecap: round; opacity: 0.7; }
+
+/* 树的位置与缩放 */
+.tree {
+  transform: translate(var(--tx), var(--ty)) scale(var(--s));
+  transform-origin: center bottom;
+}
+.bush { transform: translate(var(--bx), 470px); }
+
+/* 太阳 / 火山显隐 */
+.fx-sun     { opacity: var(--sun-opacity); transition: opacity 1.2s ease; transform-origin: 1200px 150px; }
+.sun-rays line { stroke: #ffe28a; stroke-width: 4; stroke-linecap: round; }
+body.state-happy .sun-rays { animation: sun-spin 30s linear infinite; }
+@keyframes sun-spin { to { transform: rotate(360deg); } }
+
+.fx-volcano { opacity: var(--volcano-opacity); transition: opacity 1.2s ease; }
+.volcano-body      { fill: #3a2a26; }
+.volcano-body-dark { fill: #2a1c18; }
+.lava              { fill: #ff6a1f; }
+.fire-particles circle { fill: #ffb347; }
+
+/* ============ 情绪主题配色 ============ */
+
+/* 初始 / 平静：绿色（图1 第一个） */
+body.state-calm .forest-svg {
+  --canopy-light: #8fd69c;
+  --canopy-dark:  #2f7a48;
+  --trunk:        #4a3320;
+  --ground:       #3e6b44;
+  --bush:         #56a05e;
+  --wave:         rgba(255,255,255,0.5);
+}
+
+/* 高兴：金黄（图2 右） */
+body.state-happy .forest-svg {
+  --canopy-light: #ffe08a;
+  --canopy-dark:  #d99a1f;
+  --trunk:        #6b4a20;
+  --ground:       #c9a227;
+  --bush:         #e0bd44;
+  --wave:         rgba(255, 240, 180, 0.6);
+  --sun-opacity:  1;
+}
+
+/* 生气：火山 + 暗红 */
+body.state-angry .forest-svg {
+  --canopy-light: #8a2a1a;
+  --canopy-dark:  #4a1208;
+  --trunk:        #2a1410;
+  --ground:       #5a2018;
+  --bush:         #7a2418;
+  --wave:         rgba(255, 120, 60, 0.5);
+  --volcano-opacity: 1;
+}
+body.state-angry .fx-volcano .fire-particles circle { animation: ember 1.4s ease-in infinite; }
+body.state-angry .fx-volcano .fire-particles circle:nth-child(2) { animation-delay: 0.3s; }
+body.state-angry .fx-volcano .fire-particles circle:nth-child(3) { animation-delay: 0.6s; }
+body.state-angry .fx-volcano .fire-particles circle:nth-child(4) { animation-delay: 0.9s; }
+@keyframes ember {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-40px) scale(0.2); opacity: 0; }
+}
+
+/* 害怕：雷电视效叠加（树木本身偏灰蓝，雷电层做主视觉） */
+body.state-scared .forest-svg {
+  --canopy-light: #5a6a7a;
+  --canopy-dark:  #2a3340;
+  --trunk:        #1a1e24;
+  --ground:       #2e3740;
+  --bush:         #3c4a58;
+  --wave:         rgba(180, 200, 220, 0.5);
+}
+body.state-scared .sky-layer {
+  background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 60%, #3a3a55 100%);
+}
+
+/* 难过：雨（树木偏灰绿） */
+body.state-sad .forest-svg {
+  --canopy-light: #5a7a6a;
+  --canopy-dark:  #2a4a3a;
+  --trunk:        #2a3028;
+  --ground:       #3a4a40;
+  --bush:         #4a6a58;
+  --wave:         rgba(200, 220, 230, 0.5);
+}
+
+
+/* ---- 天气特效层 ---- */
+.weather-layer {
+  position: absolute; inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* 雨 */
+#rain-layer .raindrop {
+  position: absolute;
+  width: 2px;
+  height: 22px;
+  background: linear-gradient(180deg, transparent, rgba(180, 210, 230, 0.85));
+  animation: fall linear infinite;
+}
+@keyframes fall {
+  from { transform: translateY(-40px); }
+  to   { transform: translateY(105vh); }
+}
+
+/* 闪电 */
+#lightning-layer .bolt {
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 0;
+  background: #fff;
+  filter: drop-shadow(0 0 18px #b8d4ff) drop-shadow(0 0 40px #6a9eff);
+  clip-path: polygon(40% 0, 70% 0, 45% 45%, 75% 45%, 20% 100%, 45% 55%, 15% 55%);
+  opacity: 0;
+}
+body.state-scared .bolt { animation: strike 2.4s infinite; }
+body.state-scared .bolt:nth-of-type(2) { animation-delay: 1.1s; left: 30% !important; }
+body.state-scared .bolt:nth-of-type(3) { animation-delay: 1.9s; left: 70% !important; }
+@keyframes strike {
+  0%, 92%, 100% { height: 0; opacity: 0; }
+  93% { height: 55vh; opacity: 1; }
+  95% { height: 0; opacity: 0; }
+  96% { height: 45vh; opacity: 0.9; }
+  98% { height: 0; opacity: 0; }
+}
+/* 闪电时天空闪一下 */
+body.state-scared .sky-layer { animation: sky-flash 2.4s infinite; }
+@keyframes sky-flash {
+  0%, 92%, 100% { filter: brightness(1); }
+  93% { filter: brightness(2.2); }
+  96% { filter: brightness(1.3); }
+}
+
+/* 云（害怕时显现） */
+.cloud-group { position: absolute; inset: 0; }
+body.state-scared .cloud {
+  position: absolute;
+  top: 8%;
+  width: 220px; height: 70px;
+  background: radial-gradient(ellipse at 30% 60%, #4a4a5a, transparent 65%),
+              radial-gradient(ellipse at 65% 50%, #55556a, transparent 65%),
+              radial-gradient(ellipse at 50% 70%, #3f3f50, transparent 65%);
+  filter: blur(6px);
+  opacity: 0.9;
+  animation: cloud-drift 40s linear infinite;
+}
+body.state-scared .cloud.c2 { top: 15%; animation-duration: 55s; animation-delay: -20s; opacity: 0.7; }
+@keyframes cloud-drift {
+  from { left: -250px; } to { left: 105vw; }
+}
+
+/* 萤火虫 */
+#firefly-layer .firefly {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff2a0;
+  box-shadow: 0 0 10px 3px rgba(255, 240, 150, 0.85);
+  opacity: 0;
+  animation: firefly-float 8s ease-in-out infinite, firefly-glow 1.6s ease-in-out infinite;
+}
+@keyframes firefly-float {
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(40px, -60px); }
+  50%      { transform: translate(-30px, -110px); }
+  75%      { transform: translate(30px, -70px); }
+}
+@keyframes firefly-glow {
+  0%, 100% { opacity: 0.3; transform: scale(0.7); }
+  50%      { opacity: 1; transform: scale(1.2); }
+}
+
+/* 幸福蝴蝶 */
+#firefly-layer .butterfly {
+  position: absolute;
+  width: 26px; height: 20px;
+  opacity: 0;
+}
+#firefly-layer .butterfly .wing {
+  position: absolute;
+  width: 13px; height: 18px;
+  border-radius: 50% 50% 40% 60%;
+  top: 0;
+  background: #f4a0c0;
+  transform-origin: right center;
+  animation: flap 0.18s ease-in-out infinite alternate;
+}
+#firefly-layer .butterfly .wing.left  { left: 0;  transform-origin: right center; }
+#firefly-leaf .butterfly .wing.right { right: 0; transform-origin: left center; animation-delay: 0.09s; }
+@keyframes flap {
+  from { transform: rotateY(0deg) scaleX(1); }
+  to   { transform: rotateY(60deg) scaleX(0.4); }
+}
+body.state-happy-butterfly .butterfly,
+body.state-happy-butterfly .firefly { opacity: 1; }
+
+/* 幸福时整体柔光 */
+body.state-happy .fog-container { opacity: 0.8; }
+
+
+/* ---- HUD ---- */
+.forest-hud {
+  position: absolute;
+  top: 20px; left: 24px; right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.85);
+  pointer-events: none;
+}
+.hud-left { display: flex; flex-direction: column; gap: 4px; }
+.hud-left span { background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 4px; width: fit-content; }
+.hud-right { pointer-events: auto; }
+#reset-btn {
+  font-family: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  padding: 8px 16px;
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.3);
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+}
+#reset-btn:hover { background: rgba(255,255,255,0.15); }
+#status {
+  position: absolute;
+  left: 24px; bottom: 16px;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.8);
+  z-index: 10;
+}
+
+/* 摄像头预览 */
+#camera-feed {
+  position: absolute;
+  right: 24px; bottom: 60px;
+  width: 200px; height: 150px;
+  object-fit: cover;
+  transform: scaleX(-1);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  z-index: 10;
+  opacity: 0.75;
+}
