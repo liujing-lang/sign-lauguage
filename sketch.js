@@ -227,7 +227,9 @@ function setup() {
 }
 
 function enterForest() {
+  if (typeof userStartAudio === 'function') {
   userStartAudio();
+}
 
   select("#intro").addClass("hidden");
   select("#forest").removeClass("hidden");
